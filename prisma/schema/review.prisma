@@ -1,0 +1,14 @@
+model Review {
+    id String @id @default(uuid())
+
+    rating  Int
+    comment String @db.Text
+
+    studentId String
+    student   User   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+    tutorProfileId String
+    tutor          TutorProfile @relation(fields: [tutorProfileId], references: [id], onDelete: Cascade)
+
+    createdAt DateTime @default(now())
+}

@@ -1,0 +1,9 @@
+model TutorCategory {
+    tutorId    String
+    categoryId String
+
+    tutor    TutorProfile @relation(fields: [tutorId], references: [id], onDelete: Cascade)
+    category Category     @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+    @@id([tutorId, categoryId])
+}

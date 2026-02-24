@@ -1,0 +1,12 @@
+model AvailabilitySlot {
+    id String @id @default(uuid())
+
+    tutorProfileId String
+    tutor          TutorProfile @relation(fields: [tutorProfileId], references: [id], onDelete: Cascade)
+
+    startTime DateTime
+    endTime   DateTime
+    isBooked  Boolean  @default(false)
+
+    createdAt DateTime @default(now())
+}

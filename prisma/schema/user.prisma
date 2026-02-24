@@ -1,6 +1,22 @@
+enum Role {
+    STUDENT
+    TUTOR
+    ADMIN
+}
+
 model User {
-    id    Int     @id @default(autoincrement())
-    email String  @unique
-    name  String?
-    posts Post[]
+    id       String  @id @default(uuid())
+    name     String
+    email    String  @unique
+    password String
+    role     Role
+    isBanned Boolean @default(false)
+
+    tutorProfile TutorProfile?
+
+    bookings Booking[] @relation("StudentBookings")
+    reviews  Review[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
 }
