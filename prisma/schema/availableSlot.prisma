@@ -4,9 +4,13 @@ model AvailabilitySlot {
     tutorProfileId String
     tutor          TutorProfile @relation(fields: [tutorProfileId], references: [id], onDelete: Cascade)
 
+    categoryId String
+    category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
     startTime DateTime
     endTime   DateTime
     isBooked  Boolean  @default(false)
 
+    booking   Booking?
     createdAt DateTime @default(now())
 }

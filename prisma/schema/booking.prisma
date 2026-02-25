@@ -13,13 +13,13 @@ model Booking {
     tutorProfileId String
     tutor          TutorProfile @relation(fields: [tutorProfileId], references: [id], onDelete: Cascade)
 
+    slotId String           @unique
+    slot   AvailabilitySlot @relation(fields: [slotId], references: [id])
+
+    status BookingStatus @default(CONFIRMED)
+
+    createdAt  DateTime  @default(now())
+    updatedAt  DateTime  @updatedAt
+    category   Category? @relation(fields: [categoryId], references: [id])
     categoryId String?
-    category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-
-    startTime DateTime
-    endTime   DateTime
-    status    BookingStatus @default(CONFIRMED)
-
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
 }

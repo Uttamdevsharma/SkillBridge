@@ -5,6 +5,7 @@ model Category {
 
     tutorLinks TutorCategory[]
     bookings   Booking[]
+    slots      AvailabilitySlot[]
 
     createdAt DateTime @default(now())
 }
