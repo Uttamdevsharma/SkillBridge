@@ -4,6 +4,7 @@ import { ZodError } from "zod";
 import { AppError } from "../utils/error/AppError";
 import { Prisma } from "../../generated/prisma/client";
 
+
 export const globalErrorHandler = (
   error: unknown,
   req: Request,
