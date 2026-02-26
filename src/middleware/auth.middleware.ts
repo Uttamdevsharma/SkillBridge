@@ -13,6 +13,7 @@ export const requireAuth = (
   next: NextFunction
 ) => {
 
+  
   const header = req.headers.authorization
 
   if (!header || !header.startsWith("Bearer ")) {

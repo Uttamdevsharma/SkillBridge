@@ -46,6 +46,7 @@ const getCurrentUser = async (req: Request, res: Response, next: NextFunction) =
   }
 }
 
+
 const updatePassword = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const parsedBody = changePasswordSchema.parse(req.body)
