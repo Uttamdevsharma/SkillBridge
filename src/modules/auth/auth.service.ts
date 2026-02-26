@@ -114,7 +114,6 @@ const fetchCurrentUser = async (userId: string) => {
       role: true
     }
   })
-
   if (!user) {
     throw new AppError(404, "User not found")
   }

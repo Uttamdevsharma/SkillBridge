@@ -10,4 +10,5 @@ authRouter.post("/login", authController.userLogin)
 authRouter.get("/me", requireAuth, authController.getCurrentUser)
 authRouter.patch("/change-password", requireAuth, authController.updatePassword)
 
+
 export default authRouter

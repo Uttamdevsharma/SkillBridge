@@ -32,6 +32,7 @@ const userLogin = async (req: Request, res: Response, next: NextFunction) => {
   }
 }
 
+
 const getCurrentUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userInfo = await authService.fetchCurrentUser(req.user!.userId)
