@@ -4,6 +4,9 @@ model Review {
     rating  Int
     comment String @db.Text
 
+    bookingId String  @unique
+    booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
     studentId String
     student   User   @relation(fields: [studentId], references: [id], onDelete: Cascade)
 

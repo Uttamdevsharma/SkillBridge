@@ -1,0 +1,265 @@
+import { Booking, Prisma, Review } from "../../../generated/prisma/client"
+import { BookingStatus } from "../../../generated/prisma/enums"
+import { prisma } from "../../lib/prisma"
+
+import { AppError } from "../../utils/error/AppError"
+
+
+const getTutors = async (query: any) => {
+    const {
+      search,
+      category,
+      minRate,
+      maxRate
+    } = query
+  
+    const where: Prisma.TutorProfileWhereInput = {}
+  
+    if (search) {
+      where.user = {
+        name: {
+          contains: search,
+          mode: "insensitive"
+        }
+      }
+    }
+  
+    if (minRate || maxRate) {
+      where.hourlyRate = {
+        gte: minRate ? Number(minRate) : undefined,
+        lte: maxRate ? Number(maxRate) : undefined
+      }
+    }
+  
+    if (category) {
+      where.tutorCategories = {
+        some: {
+          category: {
+            name: {
+              equals: category,
+              mode: "insensitive"
+            }
+          }
+        }
+      }
+    }
+  
+    return prisma.tutorProfile.findMany({
+      where,
+      include: {
+        user: {
+          select: { id: true, name: true }
+        },
+        tutorCategories: {
+          include: {
+            category: true
+          }
+        },
+        reviews: true
+      }
+    })
+  }
+  
+  const getTutorDetails = async (id: string) => {
+    const tutor = await prisma.tutorProfile.findUnique({
+      where: { id },
+      include: {
+        user: {
+          select: { id: true, name: true, email: true }
+        },
+        tutorCategories: {
+          include: { category: true }
+        },
+        reviews: {
+          include: {
+            student: {
+              select: { name: true }
+            }
+          }
+        },
+        availabilitySlots: {
+          where: { isBooked: false }
+        }
+      }
+    })
+  
+    if (!tutor) {
+      throw new AppError(404, "Tutor not found")
+    }
+  
+    return tutor
+  }
+  
+  const getCategories = async () => {
+    return prisma.category.findMany({
+      orderBy: { name: "asc" }
+    })
+  }
+  
+const getProfile = async (userId: string) => {
+  return prisma.tutorProfile.findUnique({
+    where: { userId },
+    include: {
+      tutorCategories: { include: { category: true } }
+    }
+  })
+}
+
+const upsertProfile = async (userId: string, data: any) => {
+  return prisma.tutorProfile.upsert({
+    where: { userId },
+    update: data,
+    create: { userId, ...data }
+  })
+}
+
+const addSubjects = async (userId: string, categoryIds: string[]) => {
+  const profile = await prisma.tutorProfile.findUnique({ where: { userId } })
+  if (!profile) throw new AppError(400, "Create profile first")
+
+  await prisma.tutorCategory.createMany({
+    data: categoryIds.map(id => ({
+      tutorId: profile.id,
+      categoryId: id
+    })),
+    skipDuplicates: true
+  })
+}
+
+const removeSubject = async (userId: string, categoryId: string) => {
+  const profile = await prisma.tutorProfile.findUnique({ where: { userId } })
+  if (!profile) throw new AppError(400, "Profile not found")
+
+  await prisma.tutorCategory.delete({
+    where: {
+      tutorId_categoryId: {
+        tutorId: profile.id,
+        categoryId
+      }
+    }
+  })
+}
+
+const getSubjects = async (userId: string) => {
+  const profile = await prisma.tutorProfile.findUnique({
+    where: { userId },
+    include: {
+      tutorCategories: { include: { category: true } }
+    }
+  })
+  return profile?.tutorCategories
+}
+
+const createSlot = async (userId: string, data: any) => {
+  const profile = await prisma.tutorProfile.findUnique({ where: { userId } })
+  if (!profile) throw new AppError(400, "Complete profile first")
+
+  return prisma.availabilitySlot.create({
+    data: {
+      tutorProfileId: profile.id,
+      categoryId: data.categoryId,
+      startTime: new Date(data.startTime),
+      endTime: new Date(data.endTime)
+    }
+  })
+}
+
+const getSlots = async (userId: string) => {
+  const profile = await prisma.tutorProfile.findUnique({ where: { userId } })
+  return prisma.availabilitySlot.findMany({
+    where: { tutorProfileId: profile?.id }
+  })
+}
+
+const deleteSlot = async (userId: string, slotId: string) => {
+  const slot = await prisma.availabilitySlot.findUnique({ where: { id: slotId } })
+  if (!slot || slot.isBooked) throw new AppError(400, "Cannot delete booked slot")
+  await prisma.availabilitySlot.delete({ where: { id: slotId } })
+}
+
+const getBookings = async (userId: string) => {
+  const profile = await prisma.tutorProfile.findUnique({ where: { userId } })
+  return prisma.booking.findMany({
+    where: { tutorProfileId: profile?.id }
+  })
+}
+
+const markComplete = async (userId: string, bookingId: string) => {
+  await prisma.booking.update({
+    where: { id: bookingId },
+    data: { status: BookingStatus.COMPLETED }
+  })
+}
+
+const getReviews = async (userId: string) => {
+  const profile = await prisma.tutorProfile.findUnique({ where: { userId } })
+  return prisma.review.findMany({
+    where: { tutorProfileId: profile?.id }
+  })
+}
+
+
+
+const dashboard = async (userId: string) => {
+  const profile = await prisma.tutorProfile.findUnique({
+    where: { userId }
+  })
+
+  if (!profile) {
+    throw new AppError(400, "Profile not found")
+  }
+
+  const bookings: Booking[] = await prisma.booking.findMany({
+    where: { tutorProfileId: profile.id }
+  })
+
+  const reviews: Review[] = await prisma.review.findMany({
+    where: { tutorProfileId: profile.id }
+  })
+
+  const uniqueStudents = new Set(
+    bookings.map((b: Booking) => b.studentId)
+  ).size
+
+  const completedSessions = bookings.filter(
+    (b: Booking) => b.status === BookingStatus.COMPLETED
+  ).length
+
+  const upcomingSessions = bookings.filter(
+    (b: Booking) => b.status === BookingStatus.CONFIRMED
+  ).length
+
+  const averageRating =
+    reviews.length > 0
+      ? reviews.reduce(
+          (acc: number, r: Review) => acc + r.rating,
+          0
+        ) / reviews.length
+      : 0
+
+  return {
+    totalSessions: bookings.length,
+    completedSessions,
+    upcomingSessions,
+    totalStudents: uniqueStudents,
+    averageRating
+  }
+}
+
+export const tutorService = {
+  getTutors,
+  getTutorDetails,
+  getCategories,
+  dashboard,
+  getProfile,
+  upsertProfile,
+  addSubjects,
+  removeSubject,
+  getSubjects,
+  createSlot,
+  getSlots,
+  deleteSlot,
+  getBookings,
+  markComplete,
+  getReviews
+}

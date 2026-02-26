@@ -18,8 +18,11 @@ model Booking {
 
     status BookingStatus @default(CONFIRMED)
 
-    createdAt  DateTime  @default(now())
-    updatedAt  DateTime  @updatedAt
+    review Review? // 👈 এই লাইন add কর
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
     category   Category? @relation(fields: [categoryId], references: [id])
     categoryId String?
 }

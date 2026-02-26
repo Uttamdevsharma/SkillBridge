@@ -5,6 +5,7 @@ import authRouter from "./modules/auth/auth.routes"
 import { notFound } from "./middleware/notFound"
 import { globalErrorHandler } from "./middleware/globalErrorHandler"
 import adminRouter from "./modules/admin/admin.routes"
+import tutorRouter from "./modules/tutor/tutor.routes"
 
 const app = express()
 
@@ -21,6 +22,7 @@ app.use(cors({
 
 app.use("/api/auth",authRouter)
 app.use("/api/admin", adminRouter)
+app.use("/api",tutorRouter)
 
 app.use(notFound)
 app.use(globalErrorHandler)
