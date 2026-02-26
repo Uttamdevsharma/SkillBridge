@@ -16,7 +16,9 @@ app.use(cors({
 
 ))
 
-// app.use("api/auth",authRouter)
+
+
+app.use("/api/auth",authRouter)
 
 app.use(notFound)
 app.use(globalErrorHandler)
