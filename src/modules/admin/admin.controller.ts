@@ -10,6 +10,7 @@ const getDashboardStats = async (req: Request, res: Response, next: NextFunction
   }
 }
 
+
 const getAllUsers = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const users = await adminService.fetchUsers(req.user!.userId)

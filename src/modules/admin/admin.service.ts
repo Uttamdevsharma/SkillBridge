@@ -71,6 +71,7 @@ const fetchBookings = async () => {
   })
 }
 
+
 const addCategory = async (name: string) => {
   return prisma.category.create({
     data: { name }

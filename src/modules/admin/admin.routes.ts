@@ -20,5 +20,4 @@ adminRouter.patch("/categories/:id",requireAuth,allowRoles("ADMIN"),adminControl
 adminRouter.delete("/categories/:id",requireAuth,allowRoles("ADMIN"),adminController.deleteCategory)
 
 
-
 export default adminRouter
