@@ -13,55 +13,41 @@ type ChangePasswordInput = z.infer<typeof changePasswordSchema>
 
 const userRegister = async (payload: RegisterInput) => {
 
-  const { tutorProfile, ...userData } = payload
-
-  const existing = await prisma.user.findUnique({
-    where: { email: userData.email }
-  })
-
-  if (existing) {
-    throw new AppError(400, "Email already in use")
-  }
-
-  const encryptedPassword = await bcrypt.hash(userData.password, 10)
-
-  const createdUser = await prisma.$transaction(async (tx) => {
-
-    const newUser = await tx.user.create({
+    const existingUser = await prisma.user.findUnique({
+      where: { email: payload.email }
+    })
+  
+    if (existingUser) {
+      throw new AppError(400, "Email already in use")
+    }
+  
+    const hashedPassword = await bcrypt.hash(payload.password, 10)
+  
+    const newUser = await prisma.user.create({
       data: {
-        ...userData,
-        password: encryptedPassword
+        name: payload.name,
+        email: payload.email,
+        password: hashedPassword,
+        role: payload.role
       }
     })
-
-    if (userData.role === "TUTOR" && tutorProfile) {
-      await tx.tutorProfile.create({
-        data: {
-          userId: newUser.id,
-          ...tutorProfile
-        }
-      })
-    }
-
-    return newUser
-  })
-
-  const accessToken = jwt.sign(
-    { userId: createdUser.id, role: createdUser.role },
-    env.AUTH_SECRET,
-    { expiresIn: "7d" }
-  )
-
-  return {
-    token: accessToken,
-    user: {
-      id: createdUser.id,
-      name: createdUser.name,
-      email: createdUser.email,
-      role: createdUser.role
+  
+    const token = jwt.sign(
+      { userId: newUser.id, role: newUser.role },
+      env.AUTH_SECRET,
+      { expiresIn: "7d" }
+    )
+  
+    return {
+      token,
+      user: {
+        id: newUser.id,
+        name: newUser.name,
+        email: newUser.email,
+        role: newUser.role
+      }
     }
   }
-}
 
 const userLogin = async (payload: LoginInput) => {
 
