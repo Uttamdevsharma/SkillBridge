@@ -3,11 +3,10 @@ import { tutorController } from "./tutor.controller"
 import { allowRoles, requireAuth } from "../../middleware/auth.middleware"
 
 
+
 const tutorRouter = Router()
 
 tutorRouter.get("/tutors", tutorController.getTutors)
-
-tutorRouter.get("/tutors/:id", tutorController.getTutorDetails)
 
 tutorRouter.get("/categories", tutorController.getCategories)
 
@@ -28,5 +27,7 @@ tutorRouter.get("/tutors/bookings",requireAuth,allowRoles("TUTOR"), tutorControl
 tutorRouter.patch("/tutors/bookings/:id/complete", requireAuth,allowRoles("TUTOR"),tutorController.markComplete)
 
 tutorRouter.get("/tutors/reviews",requireAuth,allowRoles("TUTOR"), tutorController.getReviews)
+tutorRouter.get("/tutors/:id", tutorController.getTutorDetails)
+
 
 export default tutorRouter

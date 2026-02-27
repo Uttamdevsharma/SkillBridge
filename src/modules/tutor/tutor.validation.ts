@@ -5,6 +5,8 @@ export const profileUpsertValidation = z.object({
   hourlyRate: z.number().positive("Hourly rate must be positive")
 })
 
+
+
 export const addSubjectsValidation = z.object({
   categoryIds: z.array(z.string()).min(1, "Select at least one category")
 })

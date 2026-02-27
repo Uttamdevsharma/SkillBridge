@@ -6,6 +6,8 @@ import { notFound } from "./middleware/notFound"
 import { globalErrorHandler } from "./middleware/globalErrorHandler"
 import adminRouter from "./modules/admin/admin.routes"
 import tutorRouter from "./modules/tutor/tutor.routes"
+import reviewRouter from "./modules/reviews/review.routes"
+import bookingRouter from "./modules/bookings/booking.routes"
 
 const app = express()
 
@@ -19,10 +21,11 @@ app.use(cors({
 ))
 
 
-
 app.use("/api/auth",authRouter)
 app.use("/api/admin", adminRouter)
 app.use("/api",tutorRouter)
+app.use("/api",reviewRouter)
+app.use("/api",bookingRouter)
 
 app.use(notFound)
 app.use(globalErrorHandler)
