@@ -12,5 +12,4 @@ reviewRouter.patch("/reviews/:id",requireAuth,allowRoles("STUDENT"),reviewContro
 reviewRouter.delete("/reviews/:id",requireAuth,allowRoles("STUDENT"),reviewController.deleteReview)
 
 
-
 export default reviewRouter
