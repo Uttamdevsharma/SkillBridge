@@ -54,6 +54,7 @@ const getTutors = async (query: any) => {
   });
 };
 
+
 const getTutorDetails = async (id: string) => {
   const tutor = await prisma.tutorProfile.findUnique({
     where: { id },

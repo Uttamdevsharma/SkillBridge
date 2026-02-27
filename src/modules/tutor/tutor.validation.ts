@@ -6,7 +6,6 @@ export const profileUpsertValidation = z.object({
 })
 
 
-
 export const addSubjectsValidation = z.object({
   categoryIds: z.array(z.string()).min(1, "Select at least one category")
 })

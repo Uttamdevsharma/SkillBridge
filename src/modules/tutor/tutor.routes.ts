@@ -30,4 +30,5 @@ tutorRouter.get("/tutors/reviews",requireAuth,allowRoles("TUTOR"), tutorControll
 tutorRouter.get("/tutors/:id", tutorController.getTutorDetails)
 
 
+
 export default tutorRouter
