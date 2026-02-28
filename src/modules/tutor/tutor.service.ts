@@ -28,17 +28,22 @@ const getTutors = async (query: any) => {
   if (category) {
     where.tutorCategories = {
       some: {
-        category: {
-          name: {
-            equals: category,
-            mode: "insensitive",
+        OR: [
+          { categoryId: category },
+          {
+            category: {
+              name: {
+                equals: category,
+                mode: "insensitive",
+              },
+            },
           },
-        },
+        ],
       },
     };
   }
 
-  return prisma.tutorProfile.findMany({
+  const tutors = await prisma.tutorProfile.findMany({
     where,
     include: {
       user: {
@@ -51,6 +56,19 @@ const getTutors = async (query: any) => {
       },
       reviews: true,
     },
+  });
+
+  return tutors.map((tutor) => {
+    const reviews = (tutor as any).reviews || [];
+    const averageRating =
+      reviews.length > 0
+        ? reviews.reduce((acc: number, r: any) => acc + r.rating, 0) /
+          reviews.length
+        : 0;
+    return {
+      ...tutor,
+      averageRating: Number(averageRating.toFixed(1)),
+    };
   });
 };
 
@@ -72,9 +90,6 @@ const getTutorDetails = async (id: string) => {
           },
         },
       },
-      availabilitySlots: {
-        where: { isBooked: false },
-      },
     },
   });
 
@@ -82,7 +97,30 @@ const getTutorDetails = async (id: string) => {
     throw new AppError(404, "Tutor not found");
   }
 
-  return tutor;
+  const reviews = (tutor as any).reviews || [];
+  const averageRating =
+    reviews.length > 0
+      ? reviews.reduce((acc: number, r: any) => acc + r.rating, 0) /
+        reviews.length
+      : 0;
+
+  const slots = await prisma.availabilitySlot.findMany({
+    where: {
+      tutorProfileId: id,
+      isBooked: false,
+    },
+    include: {
+      category: true,
+    },
+  });
+
+  return {
+    tutor: {
+      ...tutor,
+      averageRating: Number(averageRating.toFixed(1)),
+    },
+    slots,
+  };
 };
 
 const getCategories = async () => {
@@ -142,7 +180,7 @@ const getSubjects = async (userId: string) => {
       tutorCategories: { include: { category: true } },
     },
   });
-  return profile?.tutorCategories;
+  return profile?.tutorCategories || [];
 };
 
 const createSlot = async (userId: string, data: any) => {
@@ -161,8 +199,9 @@ const createSlot = async (userId: string, data: any) => {
 
 const getSlots = async (userId: string) => {
   const profile = await prisma.tutorProfile.findUnique({ where: { userId } });
+  if (!profile) return [];
   return prisma.availabilitySlot.findMany({
-    where: { tutorProfileId: profile?.id },
+    where: { tutorProfileId: profile.id },
   });
 };
 
@@ -181,7 +220,7 @@ const getBookings = async (userId: string) => {
   });
 
   if (!profile) {
-    throw new AppError(404, "Tutor profile not found");
+    return [];
   }
 
   return prisma.booking.findMany({
@@ -228,8 +267,9 @@ const markComplete = async (userId: string, bookingId: string) => {
 
 const getReviews = async (userId: string) => {
   const profile = await prisma.tutorProfile.findUnique({ where: { userId } });
+  if (!profile) return [];
   return prisma.review.findMany({
-    where: { tutorProfileId: profile?.id },
+    where: { tutorProfileId: profile.id },
   });
 };
 
@@ -239,7 +279,13 @@ const dashboard = async (userId: string) => {
   });
 
   if (!profile) {
-    throw new AppError(400, "Profile not found");
+    return {
+      totalSessions: 0,
+      completedSessions: 0,
+      upcomingSessions: 0,
+      uniqueStudents: 0,
+      averageRating: 0,
+    };
   }
 
   const bookings: Booking[] = await prisma.booking.findMany({
@@ -271,7 +317,7 @@ const dashboard = async (userId: string) => {
     totalSessions: bookings.length,
     completedSessions,
     upcomingSessions,
-    totalStudents: uniqueStudents,
+    uniqueStudents,
     averageRating,
   };
 };
