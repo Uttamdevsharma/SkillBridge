@@ -52,8 +52,7 @@ const createBooking = async (
 const getMyBookings = async (studentId: string) => {
   const bookings = await prisma.booking.findMany({
     where: {
-      studentId,
-      status: { in: ["CONFIRMED"] }
+      studentId
     },
     include: {
       slot: true,
@@ -63,16 +62,7 @@ const getMyBookings = async (studentId: string) => {
     orderBy: { createdAt: "desc" }
   })
 
-  return bookings.map(b => ({
-    id: b.id,
-    status: b.status,
-    subject: b.category?.name,
-    scheduledFor: {
-      start: b.slot.startTime,
-      end: b.slot.endTime
-    },
-    tutor: b.tutor.user.name
-  }))
+  return bookings
 }
 
 const getBookingHistory = async (studentId: string) => {
